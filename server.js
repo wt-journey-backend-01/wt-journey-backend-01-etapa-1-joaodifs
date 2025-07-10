@@ -11,8 +11,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Middleware para interpretar dados POST (formulários)
 app.use(express.urlencoded({ extended: true }));
 
-let dadosContato = null; // variável de apoio para o padrão PRG
-
 // Rota principal: index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'index.html'));
@@ -41,32 +39,37 @@ app.get('/contato', (req, res) => {
   res.sendFile(path.join(__dirname, 'views', 'contato.html'));
 });
 
-// Rota POST que recebe dados do formulário e redireciona (PRG)
+// Rota POST que recebe os dados do formulário e redireciona (PRG)
 app.post('/contato', (req, res) => {
-  dadosContato = req.body;
-  res.redirect('/contato-recebido');
+  const { nome, email, assunto, mensagem } = req.body;
+
+  // Armazena os dados temporariamente na URL como query string
+  const query = new URLSearchParams({ nome, email, assunto, mensagem }).toString();
+  res.redirect(`/contato-recebido?${query}`);
 });
 
-// Rota GET que exibe dados enviados pelo POST
+// Rota GET que exibe os dados enviados (padrão PRG)
 app.get('/contato-recebido', (req, res) => {
-  if (!dadosContato) {
-    return res.redirect('/contato');
-  }
-  const { nome, email, assunto, mensagem } = dadosContato;
-  dadosContato = null; // limpa após exibir
+  const { nome, email, assunto, mensagem } = req.query;
+
   const html = `
-    <html>
-      <head><title>Contato Recebido</title></head>
-      <body>
-        <h1>Obrigado pela mensagem, ${nome}!</h1>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Assunto:</strong> ${assunto}</p>
-        <p><strong>Mensagem:</strong><br>${mensagem}</p>
-        <a href="/">Voltar para o início</a>
-      </body>
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8" />
+      <title>Contato Recebido</title>
+    </head>
+    <body>
+      <h1>Obrigado pela mensagem, ${nome || 'Cliente'}!</h1>
+      <p><strong>Email:</strong> ${email || '-'}</p>
+      <p><strong>Assunto:</strong> ${assunto || '-'}</p>
+      <p><strong>Mensagem:</strong><br>${mensagem || '-'}</p>
+      <a href="/">Voltar para a página inicial</a>
+    </body>
     </html>
   `;
-  res.status(200).send(html);
+
+  res.status(200).type('html').send(html);
 });
 
 // Rota da API: retorna dados do JSON
