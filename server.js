@@ -83,7 +83,7 @@ app.get('/api/lanches', (req, res) => {
   });
 });
 
-// Middleware 404
+// 404
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
